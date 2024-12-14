@@ -36,46 +36,46 @@ jobs:
       - name: Build AMI with Packer
         id: build_ami
         run: |
+          cd packer
           packer init .
           AMI_ID=$(packer build -var "db_user=${{ secrets.DB_USER }}" \
                           -var "db_password=${{ secrets.DB_PASSWORD }}" \
                           -var "db_name=${{ secrets.DB_NAME }}" \
                           -var "db_root_password=${{ secrets.DB_ROOT_PASSWORD }}" \
-                          -machine-readable . | tee build.log | grep 'artifact,0,id' build.log | cut -d, -f6 | cut -d: -f2) echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+                          -machine-readable . | tee build.log | grep 'artifact,0,id' build.log | cut -d, -f6 | cut -d: -f2) 
+                          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
         continue-on-error: true
 
       - name: Create ec2 with terraform
         id: create_ec2
         run: |
+          cd terraform
           terraform init
           terraform apply -auto-approve -var "ami_id=$AMI_ID"
         continue-on-error: true
+
       - name: Send notifications to Telegram
         run: |
-          if [ "${{ steps.install_packer.outcome }}" == "success" ]; then
-            MESSAGE="Packer installation succeeded. \n"
-          else
-            MESSAGE="Packer installation failed. \n"
-          fi
+          MESSAGE=""
 
-          if [ "${{ steps.install_terraform.outcome }}" == "success" ]; then
-            MESSAGE="Terraform installation succeeded. \n"
+          if [ "${{ steps.install_tools.outcome }}" == "success" ]; then
+            MESSAGE+="✅ Packer and Terraform installation succeeded.\n"
           else
-            MESSAGE="Terraform installation failed. \n"
+            MESSAGE+="❌ Packer and Terraform installation failed.\n"
           fi
 
           if [ "${{ steps.build_ami.outcome }}" == "success" ]; then
-            MESSAGE="AMI creation succeeded. \n"
+            MESSAGE+="✅ AMI creation succeeded.\n"
           else
-            MESSAGE="AMI creation failed. \n"
+            MESSAGE+="❌ AMI creation failed.\n"
           fi
 
           if [ "${{ steps.create_ec2.outcome }}" == "success" ]; then
-            MESSAGE="Terraform apply succeeded. \n"
+            MESSAGE+="✅ EC2 instance creation succeeded.\n"
           else
-            MESSAGE="Terraform apply failed. \n"
+            MESSAGE+="❌ EC2 instance creation failed.\n"
           fi
 
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-               -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+               -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
                -d text="$MESSAGE"
