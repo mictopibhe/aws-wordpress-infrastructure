@@ -46,10 +46,16 @@ build {
   }
 
   provisioner "shell" {
-    script = "./docker.sh"
+    inline = [
+        "echo 'DB_USER={{user `db_user`}}' > /home/ubuntu/.env",
+        "echo 'DB_PASSWORD={{user `db_password`}}' >> /home/ubuntu/.env",
+        "echo 'DB_NAME={{user `db_name`}}' >> /home/ubuntu/.env",
+        "echo 'DB_ROOT_PASSWORD={{user `db_root_password`}}' >> /home/ubuntu/.env",
+        "cd /home/ubuntu && docker-compose up -d"
+      ]
   }
 
-  post-processor "manifest" {
-    output = "manifest.json"
+  provisioner "shell" {
+    script = "./docker.sh"
   }
 }
