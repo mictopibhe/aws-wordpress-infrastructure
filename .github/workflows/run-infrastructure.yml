@@ -18,20 +18,8 @@ jobs:
          aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
          aws-region: eu-central-1
 
-      - name: Set up packer
-        id: setup_packer
-        uses: hashicorp/setup-packer@v1
-        continue-on-error: true
-      
-      - name: Install Terraform
-        id: install_terraform
-        run: |
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor --batch --yes -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-          sudo apt-get update && sudo apt-get install -y packer terraform
-        continue-on-error: true
-
       - name: Build AMI with Packer
+        uses: hashicorp/setup-packer@main
         id: build_ami
         env:
           DB_USER: ${{ secrets.DB_USER }}
@@ -39,7 +27,6 @@ jobs:
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
         run: |
-          cd packer
           packer init .
           packer validate .
           packer build . 
@@ -47,11 +34,11 @@ jobs:
         continue-on-error: true
 
       - name: Create ec2 with terraform
+        uses: hashicorp/setup-terraform@v2
         id: create_ec2
         env:
           AMI_ID: $AMI_ID
         run: |
-          cd terraform
           terraform init
           terraform apply
         continue-on-error: true
@@ -59,18 +46,6 @@ jobs:
       - name: Send notifications to Telegram
         run: |
           MESSAGE=""
-
-          if [ "${{ steps.setup_packer.outcome }}" == "success" ]; then
-            MESSAGE+="✅ Packer setup succeeded.\n"
-          else
-            MESSAGE+="❌ Packer setup failed.\n"
-          fi
-
-          if [ "${{ steps.install_terraform.outcome }}" == "success" ]; then
-            MESSAGE+="✅ Terraform installation succeeded.\n"
-          else
-            MESSAGE+="❌ Terraform installation failed.\n"
-          fi
 
           if [ "${{ steps.build_ami.outcome }}" == "success" ]; then
             MESSAGE+="✅ AMI creation succeeded.\n"
