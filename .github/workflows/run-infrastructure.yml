@@ -1,0 +1,77 @@
+name: Deploy wordpress EC2 with notification
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+         aws-access-key-id: ${{secrets.AWS_ACCESS_KEY}}
+         aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+         aws-region: eu-central-1
+
+      - name: Install packer
+        id: install_packer
+        run: |
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+          sudo apt update && sudo apt install packer
+        continue-on-error: true
+
+      - name: Install Terraform
+        id: install_terraform
+        run: |
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+          sudo apt update && sudo apt install terraform
+        continue-on-error: true
+
+      - name: Build AMI with Packer
+        id: build_ami
+        run: |
+          packer init .
+          AMI_ID=$(packer build -machine-readable . | tee build.log | grep 'artifact,0,id' build.log | cut -d, -f6 | cut -d: -f2)
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Create ec2 with terraform
+        id: create_ec2
+        run: |
+          terraform init
+          terraform apply -auto-approve -var "ami_id=$AMI_ID"
+        continue-on-error: true
+      - name: Send notifications to Telegram
+        run: |
+          if [ "${{ steps.install_packer.outcome }}" == "success" ]; then
+            MESSAGE="Packer installation succeeded. \n"
+          else
+            MESSAGE="Packer installation failed. \n"
+          fi
+
+          if [ "${{ steps.install_terraform.outcome }}" == "success" ]; then
+            MESSAGE="Terraform installation succeeded. \n"
+          else
+            MESSAGE="Terraform installation failed. \n"
+          fi
+
+          if [ "${{ steps.build_ami.outcome }}" == "success" ]; then
+            MESSAGE="AMI creation succeeded. \n"
+          else
+            MESSAGE="AMI creation failed. \n"
+          fi
+
+          if [ "${{ steps.create_ec2.outcome }}" == "success" ]; then
+            MESSAGE="Terraform apply succeeded. \n"
+          else
+            MESSAGE="Terraform apply failed. \n"
+          fi
+
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+               -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+               -d "text=$MESSAGE"
