@@ -40,8 +40,7 @@ jobs:
                           -var "db_password=${{ secrets.DB_PASSWORD }}" \
                           -var "db_name=${{ secrets.DB_NAME }}" \
                           -var "db_root_password=${{ secrets.DB_ROOT_PASSWORD }}" \
-                          -machine-readable . | tee build.log | grep 'artifact,0,id' build.log | cut -d, -f6 | cut -d: -f2)
-    echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+                          -machine-readable . | tee build.log | grep 'artifact,0,id' build.log | cut -d, -f6 | cut -d: -f2) echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
         continue-on-error: true
 
       - name: Create ec2 with terraform
