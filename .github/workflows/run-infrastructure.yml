@@ -29,18 +29,18 @@ jobs:
         run: |
           packer init .
           packer validate .
-          packer build . 
-          echo "AMI_ID=${jq -r '.builds[0].artifact_id|split(":")[1]' ./manifest.json} >> $GITHUB_ENV
+          packer build .
+          echo "AMI_ID=$(jq -r '.builds[0].artifact_id | split(":")[1]' ./manifest.json)" >> $GITHUB_ENV
         continue-on-error: true
 
       - name: Create ec2 with terraform
         uses: hashicorp/setup-terraform@v2
         id: create_ec2
         env:
-          AMI_ID: $AMI_ID
+          AMI_ID: ${{ env.AMI_ID }}  # Передача AMI_ID через середовище GitHub Actions
         run: |
           terraform init
-          terraform apply
+          terraform apply -var "ami_id=${{ env.AMI_ID }}"
         continue-on-error: true
 
       - name: Send notifications to Telegram

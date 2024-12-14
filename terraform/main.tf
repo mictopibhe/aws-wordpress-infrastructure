@@ -12,6 +12,11 @@ provider "aws" {
   region = "eu-central-1"
 }
 
+variable "ami_id" {
+  description = "The AMI ID to use for the EC2 instance"
+  type        = string
+}
+
 resource "aws_instance" "example" {
   ami           = "var.ami_id" 
   instance_type = "t2.micro"             
