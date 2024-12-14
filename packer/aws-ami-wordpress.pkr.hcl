@@ -11,6 +11,11 @@ locals {
   timestamp = regex_replace(timestamp(), "[-TZ:]", "")
 }
 
+variable "db_user" {}
+variable "db_password" {}
+variable "db_name" {}
+variable "db_root_password" {}
+
 source "amazon-ebs" "ubuntu" {
   region        = "eu-central-1"
 
