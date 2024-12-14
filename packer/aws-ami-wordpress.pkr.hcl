@@ -60,10 +60,10 @@ build {
 
   provisioner "shell" {
     inline = [
-      "export DB_USER="${var.db_user}"",
-      "export DB_PASSWORD="${var.db_password}"",
-      "export DB_NAME="${var.db_name}"",
-      "export DB_ROOT_PASSWORD="${var.db_root_password}""
+      "export DB_USER=\"${var.db_user}\"",
+      "export DB_PASSWORD=\"${var.db_password}\"",
+      "export DB_NAME=\"${var.db_name}\"",
+      "export DB_ROOT_PASSWORD=\"${var.db_root_password}\""
     ]
   }
 
