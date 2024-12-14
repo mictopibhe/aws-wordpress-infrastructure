@@ -1,18 +1,14 @@
 variable "db_user" {
-  type    = string
-  default = wordpress
+  description = "The database user"
 }
 variable "db_password" {
-  type    = string
-  default = wordpress
+  description = "The database user"
 }
 variable "db_name" {
-  type    = string
-  default = wordpress
+  description = "The database user"
 }
 variable "db_root_password" {
-  type    = string
-  default = wordpress
+  description = "The database user"
 }
 
 packer {
