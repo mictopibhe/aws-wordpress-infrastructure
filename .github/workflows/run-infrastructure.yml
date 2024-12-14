@@ -38,8 +38,8 @@ jobs:
         with:
           command: build
           target: ./packer/aws-ami-wordpress.pkr.hcl
-          environment_vars: |
-            DB_USER=${{ secrets.DB_USER }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_NAME=${{ secrets.DB_NAME }}
-            DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
+          arguments: |
+            -var "DB_USER=${{ secrets.DB_USER }}"
+            -var "DB_PASSWORD=${{ secrets.DB_PASSWORD }}"
+            -var "DB_NAME=${{ secrets.DB_NAME }}"
+            -var "DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}"

@@ -1,3 +1,16 @@
+variable "DB_USER" {
+  default = wordpress
+}
+variable "DB_PASSWORD" {
+  default = wordpress
+}
+variable "DB_NAME" {
+  default = wordpress
+}
+variable "DB_ROOT_PASSWORD" {
+  default = wordpress
+}
+
 packer {
   required_plugins {
     amazon = {
@@ -9,10 +22,6 @@ packer {
 
 locals {
   timestamp = regex_replace(timestamp(), "[-TZ:]", "")
-  DB_USER = getenv("DB_USER", "fallback_value")
-  DB_PASSWORD = getenv("DB_PASSWORD", "fallback_value")
-  DB_NAME = getenv("DB_NAME", "fallback_value")
-  DB_ROOT_PASSWORD = getenv("DB_ROOT_PASSWORD", "fallback_value")
 }
 
 source "amazon-ebs" "ubuntu" {
@@ -51,10 +60,10 @@ build {
 
   provisioner "shell" {
     inline = [
-      "export DB_USER=${local.DB_USER}",
-      "export DB_PASSWORD=${local.DB_PASSWORD}",
-      "export DB_NAME=${local.DB_NAME}",
-      "export DB_ROOT_PASSWORD=${local.DB_ROOT_PASSWORD}"
+      "export DB_USER=${var.DB_USER}",
+      "export DB_PASSWORD=${var.DB_PASSWORD}",
+      "export DB_NAME=${var.DB_NAME}",
+      "export DB_ROOT_PASSWORD=${var.DB_ROOT_PASSWORD}"
     ]
   }
 
