@@ -9,67 +9,25 @@ jobs:
 
     steps:
       - name: Checkout code
+        id: checkout_code
         uses: actions/checkout@v3
 
       - name: Configure AWS credentials
+        id: credentials_setup
         uses: aws-actions/configure-aws-credentials@v3
         with:
          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
          aws-region: eu-central-1
 
-      # Встановлення Packer
-      - name: Install Packer
-        run: |
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo tee /etc/apt/trusted.gpg.d/hashicorp.asc
-          sudo apt update
-          sudo apt install packer
+      - name: Initialize Packer Template
+        uses: hashicorp/packer-github-actions@master
+        with:
+          command: init
 
-      # Встановлення Terraform
-      - name: Install Terraform via HashiCorp repository
-        run: |
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo tee /etc/apt/trusted.gpg.d/hashicorp.asc
-          sudo apt update
-          sudo apt install terraform
-
-      - name: Build AMI with Packer
-        id: build_ami
-        env:
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
-        run: |
-          packer init .
-          packer validate .
-          packer build .
-          echo "AMI_ID=$(jq -r '.builds[0].artifact_id | split(":")[1]' ./manifest.json)" >> $GITHUB_ENV
-        continue-on-error: true
-
-      - name: Create EC2 with Terraform
-        id: create_ec2
-        env:
-          AMI_ID: ${{ env.AMI_ID }}  # Передача AMI_ID через середовище GitHub Actions
-        run: |
-          terraform init
-          terraform apply -var "ami_id=${{ env.AMI_ID }}"
-        continue-on-error: true
-
-      - name: Send notifications to Telegram
-        run: |
-          MESSAGE=""
-          if [ "${{ steps.build_ami.outcome }}" == "success" ]; then
-            MESSAGE+="✅ AMI creation succeeded.\n"
-          else
-            MESSAGE+="❌ AMI creation failed.\n"
-          fi
-          if [ "${{ steps.create_ec2.outcome }}" == "success" ]; then
-            MESSAGE+="✅ EC2 instance creation succeeded.\n"
-          else
-            MESSAGE+="❌ EC2 instance creation failed.\n"
-          fi
-          FORMATTED_MESSAGE=$(echo -e "$MESSAGE" | sed ':a;N;$!ba;s/\n/%0A/g')
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-               -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-               -d parse_mode="Markdown" \
-               -d text="$FORMATTED_MESSAGE"
+      - name: Validate Template
+        uses: hashicorp/packer-github-actions@master
+        with:
+          command: validate
+          arguments: -syntax-only
+          target: /packer/aws-ami-wordpress.pkr.hcl
