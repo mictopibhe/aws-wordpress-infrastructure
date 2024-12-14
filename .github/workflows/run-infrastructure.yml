@@ -18,20 +18,11 @@ jobs:
          aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
          aws-region: eu-central-1
 
-      - name: Set environment variables
-        run: |
-          echo "DB_USER=${{ secrets.DB_USER }}" >> $GITHUB_ENV
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> $GITHUB_ENV
-          echo "DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}" >> $GITHUB_ENV
-
-      - name: Install packer
-        id: install_packer
-        run: |
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-          sudo apt update && sudo apt install packer
+      - name: Set up packer
+        id: setup_packer
+        uses: hashicorp/setup-packer@v1
         continue-on-error: true
-
+      
       - name: Install Terraform
         id: install_terraform
         run: |
@@ -42,30 +33,43 @@ jobs:
 
       - name: Build AMI with Packer
         id: build_ami
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
         run: |
           cd packer
           packer init .
           packer validate .
-          AMI_ID=$(packer build -machine-readable . | tee build.log grep 'artifact,0,id' build.log | cut -d, -f6 | cut -d: -f2) 
-          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+          packer build . 
+          echo "AMI_ID=${jq -r '.builds[0].artifact_id|split(":")[1]' ./manifest.json} >> $GITHUB_ENV
         continue-on-error: true
 
       - name: Create ec2 with terraform
         id: create_ec2
+        env:
+          AMI_ID: $AMI_ID
         run: |
           cd terraform
           terraform init
-          terraform apply -auto-approve -var "ami_id=$AMI_ID"
+          terraform apply
         continue-on-error: true
 
       - name: Send notifications to Telegram
         run: |
           MESSAGE=""
 
-          if [ "${{ steps.install_tools.outcome }}" == "success" ]; then
-            MESSAGE+="✅ Packer and Terraform installation succeeded.\n"
+          if [ "${{ steps.setup_packer.outcome }}" == "success" ]; then
+            MESSAGE+="✅ Packer setup succeeded.\n"
           else
-            MESSAGE+="❌ Packer and Terraform installation failed.\n"
+            MESSAGE+="❌ Packer setup failed.\n"
+          fi
+
+          if [ "${{ steps.install_terraform.outcome }}" == "success" ]; then
+            MESSAGE+="✅ Terraform installation succeeded.\n"
+          else
+            MESSAGE+="❌ Terraform installation failed.\n"
           fi
 
           if [ "${{ steps.build_ami.outcome }}" == "success" ]; then

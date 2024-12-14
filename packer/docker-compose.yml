@@ -27,11 +27,11 @@ services:
     volumes:
       - wordpress:/var/www/html
     restart: always
-    environment:
-      - WORDPRESS_DB_HOST:db:3306
-      - WORDPRESS_DB_USER:${DB_USER}
-      - WORDPRESS_DB_PASSWORD:${DB_PASSWORD}
-      - WORDPRESS_DB_NAME:${DB_NAME}
+    env_file:
+      - /tmp/db_user.env
+      - /tmp/db_password.env
+      - /tmp/db_name.env
+      - /tmp/db_root_password.env
     networks:
       - app-network
 

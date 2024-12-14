@@ -29,6 +29,26 @@ source "amazon-ebs" "ubuntu" {
   ami_name      = "wordpress-ami-${local.timestamp}"
 }
 
+variable "db_user" {
+  type    = string
+  default = "default_user"
+}
+
+variable "db_password" {
+  type    = string
+  default = "default_password"
+}
+
+variable "db_name" {
+  type    = string
+  default = "default_db"
+}
+
+variable "db_root_password" {
+  type    = string
+  default = "default_root_password"
+}
+
 build {
   name = "learn-packer"
   sources = [
@@ -47,11 +67,10 @@ build {
 
   provisioner "shell" {
     inline = [
-      # Створюємо .env файл для Docker Compose з секретами
-      "echo DB_USER=$DB_USER > .env",
-      "echo DB_PASSWORDL=$DB_PASSWORD >> .env",
-      "echo DB_NAME=$DB_NAME >> .env",
-      "echo DB_ROOT_PASSWORD=$DB_ROOT_PASSWORD >> .env"
+      "echo 'DB_USER={{user `db_user`}}' > /tmp/db_user.env",
+      "echo 'DB_PASSWORD={{user `db_password`}}' > /tmp/db_password.env",
+      "echo 'DB_NAME={{user `db_name`}}' > /tmp/db_name.env",
+      "echo 'DB_ROOT_PASSWORD={{user `db_root_password`}}' > /tmp/db_root_password.env"
     ]
   }
 
