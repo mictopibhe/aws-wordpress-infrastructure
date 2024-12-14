@@ -1,13 +1,13 @@
-variable "DB_USER" {
+variable "db_user" {
   default = wordpress
 }
-variable "DB_PASSWORD" {
+variable "db_password" {
   default = wordpress
 }
-variable "DB_NAME" {
+variable "db_name" {
   default = wordpress
 }
-variable "DB_ROOT_PASSWORD" {
+variable "db_root_password" {
   default = wordpress
 }
 
@@ -60,10 +60,10 @@ build {
 
   provisioner "shell" {
     inline = [
-      "export DB_USER=${var.DB_USER}",
-      "export DB_PASSWORD=${var.DB_PASSWORD}",
-      "export DB_NAME=${var.DB_NAME}",
-      "export DB_ROOT_PASSWORD=${var.DB_ROOT_PASSWORD}"
+      "export DB_USER=${var.db_user}",
+      "export DB_PASSWORD=${var.db_password}",
+      "export DB_NAME=${var.db_name}",
+      "export DB_ROOT_PASSWORD=${var.db_root_password}"
     ]
   }
 
