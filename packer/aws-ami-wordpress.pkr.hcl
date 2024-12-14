@@ -49,12 +49,12 @@ build {
   ]
 
   provisioner "file" {
-    source      = "docker-compose.yml"
+    source      = "./packer/docker-compose.yml"
     destination = "/home/ubuntu/docker-compose.yml"
   }
 
   provisioner "file" {
-    source      = "nginx.conf"
+    source      = "./packer/nginx.conf"
     destination = "/home/ubuntu/nginx.conf"
   }
 
@@ -68,6 +68,6 @@ build {
   }
 
   provisioner "shell" {
-    script = "./docker.sh"
+    script = "./packer/docker.sh"
   }
 }
