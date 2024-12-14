@@ -18,16 +18,20 @@ jobs:
          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
          aws-region: eu-central-1
 
+      # Встановлюємо Packer вручну
+      - name: Install Packer
+        run: |
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo tee /etc/apt/trusted.gpg.d/hashicorp.asc
+          sudo apt update
+          sudo apt install packer
+
       - name: Build AMI with Packer
-        uses: hashicorp/setup-packer@v1
         id: build_ami
         env:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
-        with:
-          packer-version: latest
         run: |
           packer init .
           packer validate .
@@ -35,13 +39,17 @@ jobs:
           echo "AMI_ID=$(jq -r '.builds[0].artifact_id | split(":")[1]' ./manifest.json)" >> $GITHUB_ENV
         continue-on-error: true
 
+      # Встановлюємо Terraform
+      - name: Install Terraform
+        run: |
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo tee /etc/apt/trusted.gpg.d/hashicorp.asc
+          sudo apt update
+          sudo apt install terraform
+
       - name: Create EC2 with Terraform
-        uses: hashicorp/setup-terraform@v2
         id: create_ec2
         env:
           AMI_ID: ${{ env.AMI_ID }}  # Передача AMI_ID через середовище GitHub Actions
-        with:
-          terraform-version: latest
         run: |
           terraform init
           terraform apply -var "ami_id=${{ env.AMI_ID }}"
