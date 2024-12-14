@@ -20,26 +20,12 @@ jobs:
          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
          aws-region: eu-central-1
 
-      - name: Initialize Packer Template
-        uses: hashicorp/packer-github-actions@master
-        with:
-          command: init
-          target: ./packer/aws-ami-wordpress.pkr.hcl
-
-      - name: Validate Template
-        uses: hashicorp/packer-github-actions@master
-        with:
-          command: validate
-          arguments: -syntax-only
-          target: ./packer/aws-ami-wordpress.pkr.hcl
-
-      - name: Build AMI
-        uses: hashicorp/packer-github-actions@master
-        with:
-          command: build
-          target: ./packer/aws-ami-wordpress.pkr.hcl
-          arguments: |
-            -var "db_user=${{ secrets.DB_USER }}"
-            -var "db_password=${{ secrets.DB_PASSWORD }}"
-            -var "db_name=${{ secrets.DB_NAME }}"
-            -var "db_root_password=${{ secrets.DB_ROOT_PASSWORD }}"
+      - name: Setup `packer`
+        uses: hashicorp/setup-packer@main
+        id: setup
+      - name: Run `packer init`
+        id: init
+        run: "packer init ./packer/aws-ami-wordpress.pkr.hcl"
+      - name: Run `packer build`
+        id: build
+        run: "packer build -force -var 'db_user=${{ secrets.DB_USER }}' -var 'db_password= ${{ secrets.DB_PASSWORD }}' -var 'db_name=${{ secrets.DB_NAME }}' -var 'db_root_password=${{ secrets.DB_ROOT_PASSWORD }}' './packer/aws-ami-wordpress.pkr.hcl'"
