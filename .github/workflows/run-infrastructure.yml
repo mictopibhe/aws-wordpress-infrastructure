@@ -18,12 +18,19 @@ jobs:
          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
          aws-region: eu-central-1
 
-      # Встановлюємо Packer вручну
+      # Встановлення Packer
       - name: Install Packer
         run: |
           curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo tee /etc/apt/trusted.gpg.d/hashicorp.asc
           sudo apt update
           sudo apt install packer
+
+      # Встановлення Terraform
+      - name: Install Terraform via HashiCorp repository
+        run: |
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo tee /etc/apt/trusted.gpg.d/hashicorp.asc
+          sudo apt update
+          sudo apt install terraform
 
       - name: Build AMI with Packer
         id: build_ami
@@ -38,13 +45,6 @@ jobs:
           packer build .
           echo "AMI_ID=$(jq -r '.builds[0].artifact_id | split(":")[1]' ./manifest.json)" >> $GITHUB_ENV
         continue-on-error: true
-
-      # Встановлюємо Terraform
-      - name: Install Terraform
-        run: |
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo tee /etc/apt/trusted.gpg.d/hashicorp.asc
-          sudo apt update
-          sudo apt install terraform
 
       - name: Create EC2 with Terraform
         id: create_ec2
