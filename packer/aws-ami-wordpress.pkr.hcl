@@ -9,6 +9,10 @@ packer {
 
 locals {
   timestamp = regex_replace(timestamp(), "[-TZ:]", "")
+  DB_USER = getenv("DB_USER", "fallback_value")
+  DB_PASSWORD = getenv("DB_PASSWORD", "fallback_value")
+  DB_NAME = getenv("DB_NAME", "fallback_value")
+  DB_ROOT_PASSWORD = getenv("DB_ROOT_PASSWORD", "fallback_value")
 }
 
 source "amazon-ebs" "ubuntu" {
@@ -29,26 +33,6 @@ source "amazon-ebs" "ubuntu" {
   ami_name      = "wordpress-ami-${local.timestamp}"
 }
 
-variable "db_user" {
-  type    = string
-  default = "default_user"
-}
-
-variable "db_password" {
-  type    = string
-  default = "default_password"
-}
-
-variable "db_name" {
-  type    = string
-  default = "default_db"
-}
-
-variable "db_root_password" {
-  type    = string
-  default = "default_root_password"
-}
-
 build {
   name = "learn-packer"
   sources = [
@@ -67,10 +51,10 @@ build {
 
   provisioner "shell" {
     inline = [
-      "echo 'DB_USER={{user `db_user`}}' > /tmp/db_user.env",
-      "echo 'DB_PASSWORD={{user `db_password`}}' > /tmp/db_password.env",
-      "echo 'DB_NAME={{user `db_name`}}' > /tmp/db_name.env",
-      "echo 'DB_ROOT_PASSWORD={{user `db_root_password`}}' > /tmp/db_root_password.env"
+      "export DB_USER=${local.DB_USER}",
+      "export DB_PASSWORD=${local.DB_PASSWORD}",
+      "export DB_NAME=${local.DB_NAME}",
+      "export DB_ROOT_PASSWORD=${local.DB_ROOT_PASSWORD}"
     ]
   }
 

@@ -32,3 +32,14 @@ jobs:
           command: validate
           arguments: -syntax-only
           target: ./packer/aws-ami-wordpress.pkr.hcl
+
+      - name: Build AMI
+        uses: hashicorp/packer-github-actions@master
+        with:
+          command: build
+          target: ./packer/aws-ami-wordpress.pkr.hcl
+          environment_vars: |
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
