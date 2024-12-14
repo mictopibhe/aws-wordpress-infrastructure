@@ -1,13 +1,17 @@
 variable "db_user" {
+  type    = string
   default = wordpress
 }
 variable "db_password" {
+  type    = string
   default = wordpress
 }
 variable "db_name" {
+  type    = string
   default = wordpress
 }
 variable "db_root_password" {
+  type    = string
   default = wordpress
 }
 
