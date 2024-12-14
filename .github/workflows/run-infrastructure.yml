@@ -46,8 +46,7 @@ jobs:
           cd packer
           packer init .
           packer validate .
-          AMI_ID=$(packer build -machine-readable . | tee build.log
-          grep 'artifact,0,id' build.log | cut -d, -f6 | cut -d: -f2) 
+          AMI_ID=$(packer build -machine-readable . | tee build.log grep 'artifact,0,id' build.log | cut -d, -f6 | cut -d: -f2) 
           echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
         continue-on-error: true
 
