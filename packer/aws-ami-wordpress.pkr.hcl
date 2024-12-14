@@ -32,7 +32,7 @@ source "amazon-ebs" "ubuntu" {
 build {
   name = "learn-packer"
   sources = [
-    "source.amazon-ebs.ubuntu-lts"
+    "source.amazon-ebs.ubuntu"
   ]
 
   provisioner "file" {
