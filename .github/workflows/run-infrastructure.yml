@@ -28,8 +28,9 @@ jobs:
       - name: Install Terraform
         id: install_terraform
         run: |
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-          sudo apt update && sudo apt install terraform
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor --batch --yes -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+          sudo apt-get update && sudo apt-get install -y packer terraform
         continue-on-error: true
 
       - name: Build AMI with Packer
@@ -76,5 +77,5 @@ jobs:
           fi
 
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-               -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
-               -d "text=$MESSAGE"
+               -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+               -d text="$MESSAGE"
