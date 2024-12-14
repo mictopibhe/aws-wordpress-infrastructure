@@ -38,12 +38,13 @@ jobs:
         run: |
           cd packer
           packer init .
-          AMI_ID=$(packer build -var "db_user=${{ secrets.DB_USER }}" \
-                          -var "db_password=${{ secrets.DB_PASSWORD }}" \
-                          -var "db_name=${{ secrets.DB_NAME }}" \
-                          -var "db_root_password=${{ secrets.DB_ROOT_PASSWORD }}" \
-                          -machine-readable . | tee build.log | grep 'artifact,0,id' build.log | cut -d, -f6 | cut -d: -f2) 
-                          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+          packer validate .
+          packer build -var "db_user=${{ secrets.DB_USER }}" \
+                       -var "db_password=${{ secrets.DB_PASSWORD }}" \
+                       -var "db_name=${{ secrets.DB_NAME }}" \
+                       -var "db_root_password=${{ secrets.DB_ROOT_PASSWORD }}" .
+          AMI_ID=$(grep 'artifact,0,id' build.log | cut -d, -f6 | cut -d: -f2) 
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
         continue-on-error: true
 
       - name: Create ec2 with terraform
@@ -76,6 +77,9 @@ jobs:
             MESSAGE+="❌ EC2 instance creation failed.\n"
           fi
 
+          FORMATTED_MESSAGE=$(echo -e "$MESSAGE" | sed ':a;N;$!ba;s/\n/%0A/g')
+
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
                -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-               -d text="$MESSAGE"
+               -d parse_mode="Markdown" \
+               -d text="$FORMATTED_MESSAGE"
