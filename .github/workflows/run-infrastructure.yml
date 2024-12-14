@@ -18,6 +18,13 @@ jobs:
          aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
          aws-region: eu-central-1
 
+      - name: Set environment variables
+        run: |
+        echo "DB_USER=${{ secrets.DB_USER }}" >> $GITHUB_ENV
+        echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+        echo "DB_NAME=${{ secrets.DB_NAME }}" >> $GITHUB_ENV
+        echo "DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}" >> $GITHUB_ENV
+
       - name: Install packer
         id: install_packer
         run: |
@@ -39,11 +46,8 @@ jobs:
           cd packer
           packer init .
           packer validate .
-          packer build -var "db_user=${{ secrets.DB_USER }}" \
-                       -var "db_password=${{ secrets.DB_PASSWORD }}" \
-                       -var "db_name=${{ secrets.DB_NAME }}" \
-                       -var "db_root_password=${{ secrets.DB_ROOT_PASSWORD }}" .
-          AMI_ID=$(grep 'artifact,0,id' build.log | cut -d, -f6 | cut -d: -f2) 
+          AMI_ID=$(packer build -machine-readable . | tee build.log
+          grep 'artifact,0,id' build.log | cut -d, -f6 | cut -d: -f2) 
           echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
         continue-on-error: true
 

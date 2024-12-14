@@ -11,11 +11,6 @@ locals {
   timestamp = regex_replace(timestamp(), "[-TZ:]", "")
 }
 
-variable "db_user" {}
-variable "db_password" {}
-variable "db_name" {}
-variable "db_root_password" {}
-
 source "amazon-ebs" "ubuntu" {
   region        = "eu-central-1"
 
@@ -52,12 +47,12 @@ build {
 
   provisioner "shell" {
     inline = [
-        "echo 'DB_USER={{user `db_user`}}' > /home/ubuntu/.env",
-        "echo 'DB_PASSWORD={{user `db_password`}}' >> /home/ubuntu/.env",
-        "echo 'DB_NAME={{user `db_name`}}' >> /home/ubuntu/.env",
-        "echo 'DB_ROOT_PASSWORD={{user `db_root_password`}}' >> /home/ubuntu/.env",
-        "cd /home/ubuntu && docker-compose up -d"
-      ]
+      # Створюємо .env файл для Docker Compose з секретами
+      "echo DB_USER=$DB_USER > .env",
+      "echo DB_PASSWORDL=$DB_PASSWORD >> .env",
+      "echo DB_NAME=$DB_NAME >> .env",
+      "echo DB_ROOT_PASSWORD=$DB_ROOT_PASSWORD >> .env"
+    ]
   }
 
   provisioner "shell" {
