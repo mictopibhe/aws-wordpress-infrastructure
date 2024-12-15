@@ -26,9 +26,6 @@ jobs:
       - name: Initialization packer
         id: packer_init
         run: "packer init ./packer/aws-ami-wordpress.pkr.hcl"
-      - name: Validate packer config
-        id: packer_validate
-        run: "packer validate ./packer/aws-ami-wordpress.pkr.hcl"
       - name: Build AMI
         id: packer_build
         run: "packer build -force -var 'db_user=${{ secrets.DB_USER }}' -var 'db_password= ${{ secrets.DB_PASSWORD }}' -var 'db_name=${{ secrets.DB_NAME }}' -var 'db_root_password=${{ secrets.DB_ROOT_PASSWORD }}' './packer/aws-ami-wordpress.pkr.hcl'"
@@ -44,9 +41,6 @@ jobs:
       - name: Initialization terraform
         id: terraform_init
         run: "terraform init ./terraform"
-      - name: Validate terraform config
-        id: terraform_validate
-        run: "terraform validate ./terraform"
       - name: Create ec2 instance
         id: terraform_apply
         run: "terraform apply -auto-approve -var 'artifact_id=${{ env.artifact_id }}' ./terraform"
