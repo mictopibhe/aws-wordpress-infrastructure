@@ -64,8 +64,8 @@ build {
       "export DB_PASSWORD=\"${var.db_password}\"",
       "export DB_NAME=\"${var.db_name}\"",
       "export DB_ROOT_PASSWORD=\"${var.db_root_password}\"",
-      "chmod +x ./packer/docker.sh",
-      "./packer/docker.sh"
+      "chmod +x /packer/docker.sh",
+      "/packer/docker.sh"
     ]
   }
 

@@ -31,7 +31,9 @@ jobs:
         run: "packer build -force -var 'db_user=${{ secrets.DB_USER }}' -var 'db_password= ${{ secrets.DB_PASSWORD }}' -var 'db_name=${{ secrets.DB_NAME }}' -var 'db_root_password=${{ secrets.DB_ROOT_PASSWORD }}' './packer/aws-ami-wordpress.pkr.hcl'"
       - name: Get AMI id
         id: get_ami_id
-        run: echo "artifact_id=$(jq -r '.builds[0].artifact_id' manifest.json)" >> $GITHUB_ENV
+        run: |
+            echo "artifact_id=$(jq -r '.builds[0].artifact_id' manifest.json)" >> $GITHUB_ENV
+            echo "${{ env.artifact_id }}"
 
       - name: Setup `terraform`
         uses: hashicorp/setup-terraform@v3
