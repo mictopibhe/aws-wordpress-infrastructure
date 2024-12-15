@@ -47,7 +47,8 @@ jobs:
         continue-on-error: true
 
       - name: Output artifact_id
-        run: echo "Artifact ID is: ${{ env.artifact_id }}"
+        id: print_artifact_id
+        run: echo "Artifact id is ${{ env.artifact_id }}"
         continue-on-error: true
 
       - name: Setup `terraform`
