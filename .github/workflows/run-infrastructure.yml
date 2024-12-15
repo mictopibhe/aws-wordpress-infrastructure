@@ -23,26 +23,59 @@ jobs:
       - name: Setup `packer`
         uses: hashicorp/setup-packer@main
         id: packer_setup
+        continue-on-error: true
+
       - name: Initialization packer
         id: packer_init
         run: "packer init ./packer/aws-ami-wordpress.pkr.hcl"
+        continue-on-error: true
+
       - name: Build AMI
         id: packer_build
-        run: "packer build -force -var 'db_user=${{ secrets.DB_USER }}' -var 'db_password= ${{ secrets.DB_PASSWORD }}' -var 'db_name=${{ secrets.DB_NAME }}' -var 'db_root_password=${{ secrets.DB_ROOT_PASSWORD }}' './packer/aws-ami-wordpress.pkr.hcl'"
+        run: |
+          packer build -force \
+          -var "db_user=${{ secrets.DB_USER }}" \
+          -var "db_password= ${{ secrets.DB_PASSWORD }}" \
+          -var "db_name=${{ secrets.DB_NAME }}" \
+          -var "db_root_password=${{ secrets.DB_ROOT_PASSWORD }}" \
+          ./packer/aws-ami-wordpress.pkr.hcl
+        continue-on-error: true
+
       - name: Get AMI id
         id: get_ami_id
-        run: |
-            echo "artifact_id=$(jq -r '.builds[0].artifact_id' manifest.json)" >> $GITHUB_ENV
-            echo "${{ env.artifact_id }}"
+        run: echo "artifact_id=$(jq -r '.builds[-1].artifact_id | split(":") | .[1]' manifest.json)" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Output artifact_id
+        run: echo "Artifact ID is: ${{ env.artifact_id }}"
+        continue-on-error: true
 
       - name: Setup `terraform`
         uses: hashicorp/setup-terraform@v3
         id: terraform_setup
         with:
           terraform_version: 1.5.6
+        continue-on-error: true
+
       - name: Initialization terraform
         id: terraform_init
         run: "terraform init ./terraform"
+        continue-on-error: true
+
       - name: Create ec2 instance
         id: terraform_apply
         run: "terraform apply -auto-approve -var 'artifact_id=${{ env.artifact_id }}' ./terraform"
+        continue-on-error: true
+
+      - name: Telegram Notification
+        if: always()
+        uses: appleboy/telegram-action@v1.3.1
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            ***GitHub Actions CI Report***
+            - Workflow Status: ${{ job.status }} ${{ job.status == 'success' && '✅' || '❌' }}
+            - Build AMI: ${{ steps.packer_build.outcome }} ${{ job.status == 'success' && '✅' || '❌' }}
+            - Create EC2: ${{ steps.terraform_apply.outcome }} ${{ job.status == 'success' && '✅' || '❌' }}
+            - Artifact ID: ${{ env.artifact_id }}
