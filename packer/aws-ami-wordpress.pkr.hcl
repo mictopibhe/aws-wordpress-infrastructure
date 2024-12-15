@@ -58,20 +58,25 @@ build {
     destination = "/home/ubuntu/nginx.conf"
   }
 
+  provisioner "file" {
+    source      = "./packer/docker.sh"
+    destination = "/home/ubuntu/docker.sh"
+  }
+
   provisioner "shell" {
     inline = [
       "export DB_USER=\"${var.db_user}\"",
       "export DB_PASSWORD=\"${var.db_password}\"",
       "export DB_NAME=\"${var.db_name}\"",
       "export DB_ROOT_PASSWORD=\"${var.db_root_password}\"",
-      "chmod +x /packer/docker.sh",
-      "/packer/docker.sh"
+      "chmod +x /home/ubuntu/docker.sh",
+      "/home/ubuntu/docker.sh"
     ]
   }
 
   post-processor "manifest" {
     output = "manifest.json"
     strip_path = true
-}
+  }
 
 }
