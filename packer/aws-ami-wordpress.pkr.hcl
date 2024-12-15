@@ -2,13 +2,13 @@ variable "db_user" {
   description = "The database user"
 }
 variable "db_password" {
-  description = "The database user"
+  description = "The database password"
 }
 variable "db_name" {
-  description = "The database user"
+  description = "The database name"
 }
 variable "db_root_password" {
-  description = "The database user"
+  description = "The database root password"
 }
 
 packer {
@@ -63,11 +63,15 @@ build {
       "export DB_USER=\"${var.db_user}\"",
       "export DB_PASSWORD=\"${var.db_password}\"",
       "export DB_NAME=\"${var.db_name}\"",
-      "export DB_ROOT_PASSWORD=\"${var.db_root_password}\""
+      "export DB_ROOT_PASSWORD=\"${var.db_root_password}\"",
+      "chmod +x ./packer/docker.sh",
+      "./packer/docker.sh"
     ]
   }
 
-  provisioner "shell" {
-    script = "./packer/docker.sh"
-  }
+  post-processor "manifest" {
+    output = "manifest.json"
+    strip_path = true
+}
+
 }

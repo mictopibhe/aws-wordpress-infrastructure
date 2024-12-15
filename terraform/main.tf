@@ -1,3 +1,7 @@
+variable "artifact_id" {
+  description = "AMI id"
+}
+
 terraform {
   required_providers {
   aws = {
@@ -18,7 +22,7 @@ variable "ami_id" {
 }
 
 resource "aws_instance" "example" {
-  ami           = "var.ami_id" 
+  ami           = "var.artifact_id" 
   instance_type = "t2.micro"             
 
   
