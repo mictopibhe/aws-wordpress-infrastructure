@@ -60,12 +60,12 @@ jobs:
 
       - name: Initialization terraform
         id: terraform_init
-        run: terraform init -chdir=./terraform
+        run: terraform init -chdir=./terraform/
         continue-on-error: true
 
       - name: Create ec2 instance
         id: terraform_apply
-        run: terraform apply -auto-approve -var 'artifact_id=${{ env.artifact_id }}' -chdir=./terraform
+        run: terraform apply -auto-approve -var 'artifact_id=${{ env.artifact_id }}' -chdir=./terraform/
         continue-on-error: true
 
       - name: Telegram Notification
