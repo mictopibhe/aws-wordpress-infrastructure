@@ -60,12 +60,12 @@ jobs:
 
       - name: Initialization terraform
         id: terraform_init
-        run: "terraform init ./terraform"
+        run: terraform init -chdir=./terraform
         continue-on-error: true
 
       - name: Create ec2 instance
         id: terraform_apply
-        run: "terraform apply -auto-approve -var 'artifact_id=${{ env.artifact_id }}' ./terraform"
+        run: terraform apply -auto-approve -var 'artifact_id=${{ env.artifact_id }}' -chdir=./terraform
         continue-on-error: true
 
       - name: Telegram Notification
@@ -77,6 +77,6 @@ jobs:
           message: |
             ***GitHub Actions CI Report***
             - Workflow Status: ${{ job.status }} ${{ job.status == 'success' && '✅' || '❌' }}
-            - Build AMI: ${{ steps.packer_build.outcome }} ${{ job.status == 'success' && '✅' || '❌' }}
-            - Create EC2: ${{ steps.terraform_apply.outcome }} ${{ job.status == 'success' && '✅' || '❌' }}
+            - Build AMI: ${{ steps.packer_build.outcome }} ${{ steps.packer_build.outcome == 'success' && '✅' || '❌' }}
+            - Create EC2: ${{ steps.terraform_apply.outcome }} ${{ steps.terraform_apply.outcome == 'success' && '✅' || '❌' }}
             - Artifact ID: ${{ env.artifact_id }}
